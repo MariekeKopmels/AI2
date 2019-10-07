@@ -129,16 +129,17 @@ public class KMeans extends ClusteringAlgorithm
 		return false;
 	}
 
-	private boolean clustersChanged(){
+		private boolean clustersChanged(){
 		for (Cluster cluster : clusters) {
-			for (Integer member : cluster.currentMembers) {
-				if (!cluster.previousMembers.contains(member)){
+			for (Integer member : cluster.previousMembers) {
+				if (!cluster.currentMembers.contains(member)){
 					return false;
 				}
 			}
 		}
 		return true;
 	}
+
 
 	public boolean test()
 	{
