@@ -129,6 +129,7 @@ public class KMeans extends ClusteringAlgorithm
 		return false;
 	}
 
+		//nieuwe code, trainen werkt als t goed is nu wel 
 		private boolean clustersChanged(){
 		for (Cluster cluster : clusters) {
 			for (Integer member : cluster.previousMembers) {
