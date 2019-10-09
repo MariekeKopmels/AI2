@@ -64,18 +64,17 @@ public class KMeans extends ClusteringAlgorithm
 			clusters[rand].currentMembers.add(i);
 		}
 
+		System.out.println("Random initialization:");
 		showMembers();
 
 		if (trainData.size() == 0){
 			return false;
 		}
 		// Step 2: Generate a new partition by assigning each datapoint to its closest cluster center
-
 		// Step 3: recalculate cluster centers
-
 		do{
 
-			// make new members old members
+			// make new members old members, empty the prototype.
 			for (Cluster cluster : clusters) {
 				cluster.previousMembers = cluster.currentMembers;
 				cluster.currentMembers = new HashSet<Integer>();
@@ -83,25 +82,24 @@ public class KMeans extends ClusteringAlgorithm
 			}
 
 			// calculate prototype per cluster
-			float memberDataLength = trainData.get(0).length;
+			float memberDataLength = trainData.get(0).length; //70
 			for(int indexCluster = 0; indexCluster < k; indexCluster++) { 
 				//index of prototype
-				
 				for(Integer indexPrototype = 0; indexPrototype < memberDataLength; indexPrototype++) { 
 					//index of members
 					float sum = 0;
 					for (Integer member : clusters[indexCluster].previousMembers) {
-						// System.out.println(trainData.get(member)[indexPrototype]);
+						//System.out.println(trainData.get(member)[indexPrototype]);
 						sum += trainData.get(member)[indexPrototype];
 					}
 					// System.out.println(sum);
 					clusters[indexCluster].prototype[indexPrototype] = sum/trainData.size();
+					//System.out.println(clusters[indexCluster].prototype[indexPrototype]);
 				}
-				
 			}
 			//showPrototypes();
 
-			// assign to new cluster
+			// assign all members to a cluster
 			for (int memberIndex = 0; memberIndex < trainData.size(); memberIndex++) {
 				float[] member = trainData.get(memberIndex);
 				Integer bestCluster = null;
@@ -129,15 +127,21 @@ public class KMeans extends ClusteringAlgorithm
 	}
 
 		private boolean clustersChanged(){
-		for (Cluster cluster : clusters) {
-			for (Integer member : cluster.previousMembers) {
-				if (!cluster.currentMembers.contains(member)){
-					return false;
+			int changeCounter = 0;
+			for (Cluster cluster : clusters) {
+				for (Integer member : cluster.currentMembers) {
+					if (!cluster.previousMembers.contains(member)){
+						changeCounter++;
+					}
 				}
 			}
+			if (changeCounter > 10) { 
+				System.out.println("Enough changes in clusters");
+				return true;
+			}
+			System.out.println("No changes in clusters");
+			return false;
 		}
-		return true;
-	}
 
 
 	public boolean test()
