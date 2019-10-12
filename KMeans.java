@@ -7,13 +7,13 @@ public class KMeans extends ClusteringAlgorithm
 
 	// Dimensionality of the vectors
 	private int dim;
-	
+
 	// Threshold above which the corresponding html is prefetched
 	private double prefetchThreshold;
-	
+
 	// Array of k clusters, class cluster is used for easy bookkeeping
 	private Cluster[] clusters;
-	
+
 	// This class represents the clusters, it contains the prototype (the mean of all it's members)
 	// and memberlists with the ID's (which are Integer objects) of the datapoints that are member of that cluster.
 	// You also want to remember the previous members so you can check if the clusters are stable.
@@ -23,7 +23,7 @@ public class KMeans extends ClusteringAlgorithm
 
 		Set<Integer> currentMembers;
 		Set<Integer> previousMembers;
-		  
+
 		public Cluster()
 		{
 			currentMembers = new HashSet<Integer>();
@@ -38,15 +38,15 @@ public class KMeans extends ClusteringAlgorithm
 	// Results of test()
 	private double hitrate;
 	private double accuracy;
-	
+
 	public KMeans(int k, Vector<float[]> trainData, Vector<float[]> testData, int dim)
 	{
 		this.k = k;
 		this.trainData = trainData;
-		this.testData = testData; 
+		this.testData = testData;
 		this.dim = dim;
 		prefetchThreshold = 0.5;
-		
+
 		// Here k new cluster are initialized
 		clusters = new Cluster[k];
 		for (int ic = 0; ic < k; ic++)
@@ -59,7 +59,7 @@ public class KMeans extends ClusteringAlgorithm
 	 	//implement k-means algorithm here:
 		// Step 1: Select an initial random partioning with k clusters
 		Random random = new Random();
-		for (Integer i = 0; i < trainData.size(); i++) { 
+		for (Integer i = 0; i < trainData.size(); i++) {
 			int rand = random.nextInt(k);
 			clusters[rand].currentMembers.add(i);
 		}
@@ -78,41 +78,42 @@ public class KMeans extends ClusteringAlgorithm
 			// make new members old members
 			for (Cluster cluster : clusters) {
 				cluster.previousMembers = cluster.currentMembers;
-				cluster.currentMembers = new HashSet<Integer>();
+				cluster.currentMembers = new HashSet<>();
 				cluster.prototype = new float[trainData.get(0).length];
 			}
 
 			// calculate prototype per cluster
 			float memberDataLength = trainData.get(0).length;
-			for(int indexCluster = 0; indexCluster < k; indexCluster++) { 
+			for(int indexCluster = 0; indexCluster < k; indexCluster++) {
+
 				//index of prototype
-				
-				for(Integer indexPrototype = 0; indexPrototype < memberDataLength; indexPrototype++) { 
-					//index of members
+				for(int indexPrototype = 0; indexPrototype < memberDataLength; indexPrototype++) {
+
 					float sum = 0;
-					for (Integer member : clusters[indexCluster].previousMembers) {
-						// System.out.println(trainData.get(member)[indexPrototype]);
+					//index of members
+					for (int member : clusters[indexCluster].previousMembers) {
 						sum += trainData.get(member)[indexPrototype];
 					}
 					// System.out.println(sum);
-					clusters[indexCluster].prototype[indexPrototype] = sum/trainData.size();
+					clusters[indexCluster].prototype[indexPrototype] = ( sum / (float) trainData.size() );
 				}
-				
-			}
-			//showPrototypes();
 
-			// assign to new cluster
+			}
+
+
+			// assignment to new cluster
 			for (int memberIndex = 0; memberIndex < trainData.size(); memberIndex++) {
 				float[] member = trainData.get(memberIndex);
-				Integer bestCluster = null;
+				int bestCluster = 0;
 				float bestDistance = memberDataLength;
-				for (int cluster = 0; cluster < k; cluster++) { 
+				for (int cluster = 0; cluster < k; cluster++) {
 					float[] prototype = clusters[cluster].prototype;
 					float currentDistance = 0;
-					for (int index = 0; index < memberDataLength; index++){ 
-						currentDistance += Math.abs(member[index] - prototype[index]); //maar dan de goede distance
+					for (int index = 0; index < memberDataLength; index++){
+						currentDistance += Math.pow(member[index] - prototype[index], 2);
 					}
 					currentDistance = (float) Math.sqrt(currentDistance);
+					System.out.println(currentDistance);
 					if (currentDistance < bestDistance) {
 						bestCluster = cluster;
 						bestDistance = currentDistance;
@@ -120,24 +121,37 @@ public class KMeans extends ClusteringAlgorithm
 				}
 				clusters[bestCluster].currentMembers.add(memberIndex);
 			}
+			System.out.println("reassigned");
 		// Step 4: repeat until clustermembership stabilizes
-			showMembers();
-
 		} while(clustersChanged());
-		
+
+		showMembers();
+
+		return true;
+	}
+
+	private boolean clustersChanged(){
+		for (Cluster cluster : clusters) {
+			if (!cluster.currentMembers.containsAll(cluster.previousMembers)) {
+				return true;
+			}
+			if (!cluster.previousMembers.containsAll(cluster.currentMembers)) {
+				return true;
+			}
+		}
 		return false;
 	}
 
-		private boolean clustersChanged(){
-		for (Cluster cluster : clusters) {
-			for (Integer member : cluster.previousMembers) {
-				if (!cluster.currentMembers.contains(member)){
-					return false;
-				}
-			}
-		}
-		return true;
-	}
+//	private boolean clustersChanged(){
+//		for (Cluster cluster : clusters) {
+//			for (Integer member : cluster.previousMembers) {
+//				if (!cluster.currentMembers.contains(member)){
+//					return false;
+//				}
+//			}
+//		}
+//		return true;
+//	}
 
 
 	public boolean test()
