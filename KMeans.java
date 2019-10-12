@@ -1,3 +1,4 @@
+import java.awt.print.Printable;
 import java.util.*;
 
 public class KMeans extends ClusteringAlgorithm
@@ -82,7 +83,7 @@ public class KMeans extends ClusteringAlgorithm
 				cluster.prototype = new float[trainData.get(0).length];
 			}
 
-			// calculate prototype per cluster
+			// calculate prototype (cluster center) per cluster
 			float memberDataLength = trainData.get(0).length;
 			for(int indexCluster = 0; indexCluster < k; indexCluster++) {
 
@@ -94,8 +95,7 @@ public class KMeans extends ClusteringAlgorithm
 					for (int member : clusters[indexCluster].previousMembers) {
 						sum += trainData.get(member)[indexPrototype];
 					}
-					// System.out.println(sum);
-					clusters[indexCluster].prototype[indexPrototype] = ( sum / (float) trainData.size() );
+					clusters[indexCluster].prototype[indexPrototype] = ( sum / (float) clusters[indexCluster].previousMembers.size() );
 				}
 
 			}
@@ -104,7 +104,7 @@ public class KMeans extends ClusteringAlgorithm
 			// assignment to new cluster
 			for (int memberIndex = 0; memberIndex < trainData.size(); memberIndex++) {
 				float[] member = trainData.get(memberIndex);
-				int bestCluster = 0;
+				Integer bestCluster = null;
 				float bestDistance = memberDataLength;
 				for (int cluster = 0; cluster < k; cluster++) {
 					float[] prototype = clusters[cluster].prototype;
@@ -113,7 +113,7 @@ public class KMeans extends ClusteringAlgorithm
 						currentDistance += Math.pow(member[index] - prototype[index], 2);
 					}
 					currentDistance = (float) Math.sqrt(currentDistance);
-					System.out.println(currentDistance);
+//					System.out.println(currentDistance);
 					if (currentDistance < bestDistance) {
 						bestCluster = cluster;
 						bestDistance = currentDistance;
