@@ -111,7 +111,7 @@ public class KMeans extends ClusteringAlgorithm
 				for (int cluster = 0; cluster < k; cluster++) {
 					float[] prototype = clusters[cluster].prototype;
 					float currentDistance = 0;
-					for (int index = 0; index < memberDataLength; index++){
+					for (int index = 0; index < memberDataLength; index++) {
 						currentDistance += Math.pow(member[index] - prototype[index], 2);
 					}
 					currentDistance = (float) Math.sqrt(currentDistance);
@@ -123,7 +123,6 @@ public class KMeans extends ClusteringAlgorithm
 				}
 				clusters[bestCluster].currentMembers.add(memberIndex);
 			}
-			System.out.println("reassigned");
 		// Step 4: repeat until clustermembership stabilizes
 		} while(clustersChanged());
 
@@ -143,18 +142,6 @@ public class KMeans extends ClusteringAlgorithm
 		}
 		return false;
 	}
-
-//	private boolean clustersChanged(){
-//		for (Cluster cluster : clusters) {
-//			for (Integer member : cluster.previousMembers) {
-//				if (!cluster.currentMembers.contains(member)){
-//					return false;
-//				}
-//			}
-//		}
-//		return true;
-//	}
-
 
 	public boolean test()
 	{
@@ -176,8 +163,8 @@ public class KMeans extends ClusteringAlgorithm
 			totalPrefetched[indexCluster] = Arrays.stream(prefetched[indexCluster]).sum();
 		}
 
-		int hitrateSum=0;
-		int	accuracySum=0;
+		float hitrateSum=0;
+		float accuracySum=0;
 
 		// iterate along all clients. Assumption: the same clients are in the same order as in the testData
 		for (int member=0; member < trainData.size(); member++){
@@ -207,13 +194,17 @@ public class KMeans extends ClusteringAlgorithm
 				}
 			}
 
-			hitrateSum += hits/requests;
-			accuracySum += hits/totalPrefetched[memberCluster];
+			if (requests != 0)
+			{
+				hitrateSum += (float) hits / requests;
+			}
+			accuracySum += (float) hits/totalPrefetched[memberCluster];
+			System.out.println(hits);
 
 		}
 
 		// set the global variables hitrate and accuracy to their appropriate value
-		this.hitrate = hitrateSum/testData.size();
+		this.hitrate =  hitrateSum/testData.size();
 		this.accuracy = accuracySum/testData.size();
 
 		return true;
