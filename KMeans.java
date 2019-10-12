@@ -57,6 +57,8 @@ public class KMeans extends ClusteringAlgorithm
 
 	public boolean train()
 	{
+		System.out.println(this.k);
+		System.out.println(this.dim);
 	 	//implement k-means algorithm here:
 		// Step 1: Select an initial random partioning with k clusters
 		Random random = new Random();
@@ -156,14 +158,64 @@ public class KMeans extends ClusteringAlgorithm
 
 	public boolean test()
 	{
-		// iterate along all clients. Assumption: the same clients are in the same order as in the testData
-		// for each client find the cluster of which it is a member
-		// get the actual testData (the vector) of this client
 		// iterate along all dimensions
 		// and count prefetched htmls
-		// count number of hits
-		// count number of requests
+		/// We do this here so we have to count only once for each cluster and each html
+
+		int[][] prefetched = new int[this.k][this.dim];
+		int[] totalPrefetched = new int[this.k];
+
+		for	(int indexCluster=0; indexCluster < this.k; indexCluster++) {
+			for (int html = 0; html < this.dim; html++){
+				if (clusters[indexCluster].prototype[html]<prefetchThreshold) {
+					prefetched[indexCluster][html]=0;
+				} else {
+					prefetched[indexCluster][html]=1;
+				}
+			}
+			totalPrefetched[indexCluster] = Arrays.stream(prefetched[indexCluster]).sum();
+		}
+
+		int hitrateSum=0;
+		int	accuracySum=0;
+
+		// iterate along all clients. Assumption: the same clients are in the same order as in the testData
+		for (int member=0; member < trainData.size(); member++){
+			int memberCluster=0;
+
+			//  for each client find the cluster of which it is a member
+			for (int i=0; i < clusters.length; i++){
+				if (clusters[i].currentMembers.contains(member)){
+					memberCluster = i;
+					break;
+				}
+			}
+
+			// get the actual testData (the vector) of this client
+			float[] memberData = testData.get(member);
+
+			// count number of hits
+			// count number of requests
+			int hits=0;
+			int requests=0;
+			for (int i = 0; i < this.dim; i++){
+				if (memberData[i] == 1.0) {
+					requests++;
+					if (memberData[i] == prefetched[memberCluster][i]) {
+						hits++;
+					}
+				}
+			}
+
+			hitrateSum += hits/requests;
+			accuracySum += hits/totalPrefetched[memberCluster];
+
+		}
+
 		// set the global variables hitrate and accuracy to their appropriate value
+		this.hitrate = hitrateSum/testData.size();
+		this.accuracy = accuracySum/testData.size();
+
 		return true;
 	}
 
