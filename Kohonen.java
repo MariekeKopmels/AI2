@@ -78,6 +78,8 @@ public class Kohonen extends ClusteringAlgorithm
 		// Repeat 'epochs' times:
 		for(int currentEpoch = 0; currentEpoch < this.epochs; currentEpoch++){
 
+			System.out.print("Completed " + currentEpoch + " training epochs.\r");
+
 			// Step 2: Calculate the squareSize and the learningRate, these decrease lineary with the number of epochs.
 			learningRate = this.initialLearningRate*(1 - ( (double) currentEpoch/this.epochs) );
 			squareSize = ( (double) this.n/2 )*(1 - ( (double) currentEpoch/this.epochs) );
@@ -131,6 +133,7 @@ public class Kohonen extends ClusteringAlgorithm
 				}
 			}
 		}
+		System.out.println("Completed " + this.epochs + " training epochs.\r");
 
 		/// Assign member to closest cluster
 		for (int member = 0; member < trainData.size(); member++){
