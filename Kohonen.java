@@ -1,3 +1,4 @@
+import javax.swing.plaf.basic.BasicInternalFrameTitlePane;
 import java.util.*;
 
 public class Kohonen extends ClusteringAlgorithm
@@ -58,6 +59,9 @@ public class Kohonen extends ClusteringAlgorithm
 			for (int i2 = 0; i2 < n; i2++) {
 				clusters[i][i2] = new Cluster();
 				clusters[i][i2].prototype = new float[dim];
+				for (int i3 = 0; i3 < dim; i3++){
+					clusters[i][i2].prototype[i3] = rnd.nextFloat();
+				}
 			}
 		}
 	}
@@ -65,11 +69,71 @@ public class Kohonen extends ClusteringAlgorithm
 	
 	public boolean train()
 	{
+
+		double learningRate = 0;
+		double squareSize = 0;
+		int radius = 0;
 		// Step 1: initialize map with random vectors (A good place to do this, is in the initialisation of the clusters)
+
 		// Repeat 'epochs' times:
+		for(int currentEpoch = 0; currentEpoch < this.epochs; currentEpoch++){
+
 			// Step 2: Calculate the squareSize and the learningRate, these decrease lineary with the number of epochs.
+			learningRate = this.initialLearningRate*(1 - ( (double) currentEpoch/this.epochs) );
+			squareSize = ( (double) this.n/2 )*(1 - ( (double) currentEpoch/this.epochs) );
+			radius = (int) squareSize;
+
 			// Step 3: Every input vector is presented to the map (always in the same order)
 			// For each vector its Best Matching Unit is found, and :
+			for (float[] vector : this.trainData) {
+
+				float bestDistance = this.dim;
+				int bestClusterDim1 = 0;
+				int bestClusterDim2 = 0;
+
+
+				for (int i = 0; i < this.n; i++) {
+					for (int i2 = 0; i2 < this.n; i2++) {
+
+						float currentDistance = 0;
+						float[] prototype = clusters[i][i2].prototype;
+
+						for (int index = 0; index < this.dim; index++) {
+							currentDistance += Math.pow(vector[index] - prototype[index], 2);
+						}
+						currentDistance = (float) Math.sqrt(currentDistance);
+						if (currentDistance < bestDistance) {
+							bestClusterDim1 = i;
+							bestClusterDim2 = i2;
+							bestDistance = currentDistance;
+						}
+					}
+				}
+
+				// Step 4: All nodes within the neighbourhood of the BMU are changed, you don't have to use distance relative learning.
+
+				/// Security for index out of bound for clusters[][]
+				int xBegin = Math.max(bestClusterDim1-radius, 0);
+				int xEnd = Math.min(bestClusterDim1+radius, this.n-1);
+
+				int yBegin = Math.max(bestClusterDim2-radius, 0);
+				int yEnd = Math.min(bestClusterDim2+radius, this.n-1);
+
+				System.out.println(xBegin +" "+ xEnd +" "+ yBegin +" "+ yEnd);
+
+				for (int i = xBegin; i <= xEnd; i++) {
+					for (int i2 = yBegin; i2 <= yEnd; i2++) {
+						float[] prototype = clusters[i][i2].prototype;
+
+						for (int index = 0; index < this.dim; index++){
+							prototype[index] = (float) (1-learningRate) * prototype[index] + (float) learningRate * vector[index];
+						}
+					}
+				}
+			}
+		}
+
+
 				// Step 4: All nodes within the neighbourhood of the BMU are changed, you don't have to use distance relative learning.
 		// Since training kohonen maps can take quite a while, presenting the user with a progress bar would be nice
 		return true;
