@@ -119,8 +119,7 @@ public class Kohonen extends ClusteringAlgorithm
 				int yBegin = Math.max(bestClusterDim2-radius, 0);
 				int yEnd = Math.min(bestClusterDim2+radius, this.n-1);
 
-				System.out.println(xBegin +" "+ xEnd +" "+ yBegin +" "+ yEnd);
-
+				// Step 4: All nodes within the neighbourhood of the BMU are changed, you don't have to use distance relative learning.
 				for (int i = xBegin; i <= xEnd; i++) {
 					for (int i2 = yBegin; i2 <= yEnd; i2++) {
 						float[] prototype = clusters[i][i2].prototype;
@@ -133,8 +132,35 @@ public class Kohonen extends ClusteringAlgorithm
 			}
 		}
 
+		/// Assign member to closest cluster
+		for (int member = 0; member < trainData.size(); member++){
 
-				// Step 4: All nodes within the neighbourhood of the BMU are changed, you don't have to use distance relative learning.
+			float[] memberData = this.trainData.get(member);
+
+			float bestDistance = this.dim;
+			int bestClusterDim1 = 0;
+			int bestClusterDim2 = 0;
+
+			for (int i = 0; i < this.n; i++) {
+				for (int i2 = 0; i2 < this.n; i2++) {
+
+					float currentDistance = 0;
+					float[] prototype = clusters[i][i2].prototype;
+
+					for (int index = 0; index < this.dim; index++) {
+						currentDistance += Math.pow(memberData[index] - prototype[index], 2);
+					}
+					currentDistance = (float) Math.sqrt(currentDistance);
+					if (currentDistance < bestDistance) {
+						bestClusterDim1 = i;
+						bestClusterDim2 = i2;
+						bestDistance = currentDistance;
+					}
+				}
+			}
+			clusters[bestClusterDim1][bestClusterDim2].currentMembers.add(member);
+		}
+
 		// Since training kohonen maps can take quite a while, presenting the user with a progress bar would be nice
 		return true;
 	}
@@ -143,12 +169,70 @@ public class Kohonen extends ClusteringAlgorithm
 	{
 		// iterate along all clients
 		// for each client find the cluster of which it is a member
-		// get the actual testData (the vector) of this client
-		// iterate along all dimensions
-		// and count prefetched htmls
-		// count number of hits
-		// count number of requests
+		int[][][] prefetched = new int[this.n][this.n][this.dim];
+		int[][] totalPrefetched = new int[this.n][this.n];
+
+		for	(int i=0; i < this.n; i++) {
+			for (int i2 = 0; i2 < this.n; i2++) {
+				for (int html = 0; html < this.dim; html++) {
+					if (clusters[i][i2].prototype[html] < prefetchThreshold) {
+						prefetched[i][i2][html] = 0;
+					} else {
+						prefetched[i][i2][html] = 1;
+					}
+				}
+				totalPrefetched[i][i2] = Arrays.stream(prefetched[i][i2]).sum();
+			}
+		}
+
+		float hitrateSum=0;
+		float accuracySum=0;
+
+		// iterate along all clients.
+		for (int member=0; member < testData.size(); member++){
+			int memberClusterDim1=0;
+			int memberClusterDim2=0;
+
+			//  for each client find the cluster of which it is a member
+			for	(int i=0; i < this.n; i++) {
+				for (int i2 = 0; i2 < this.n; i2++) {
+					if (clusters[i][i2].currentMembers.contains(member)) {
+						memberClusterDim1 = i;
+						memberClusterDim2 = i2;
+						break;
+					}
+				}
+			}
+
+			// get the actual testData (the vector) of this client
+			float[] memberData = testData.get(member);
+
+			int hits=0;
+			int requests=0;
+
+			for (int i = 0; i < this.dim; i++){
+				if (memberData[i] == 1.0) {
+					// count number of requests
+					requests++;
+					if (memberData[i] == prefetched[memberClusterDim1][memberClusterDim2][i]) {
+						// count number of hits
+						hits++;
+					}
+				}
+			}
+
+			if (requests != 0)
+			{
+				hitrateSum += (float) hits / requests;
+			}
+			accuracySum += (float) hits / totalPrefetched[memberClusterDim1][memberClusterDim2];
+
+		}
+
 		// set the global variables hitrate and accuracy to their appropriate value
+		this.hitrate =  hitrateSum/testData.size();
+		this.accuracy = accuracySum/testData.size();
+
 		return true;
 	}
 

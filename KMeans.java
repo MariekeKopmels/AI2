@@ -162,11 +162,11 @@ public class KMeans extends ClusteringAlgorithm
 		float accuracySum=0;
 
 		// iterate along all clients. Assumption: the same clients are in the same order as in the testData
-		for (int member=0; member < trainData.size(); member++){
+		for (int member=0; member < testData.size(); member++){
 			int memberCluster=0;
 
 			//  for each client find the cluster of which it is a member
-			for (int i=0; i < clusters.length; i++){
+			for (int i=0; i < this.k; i++){
 				if (clusters[i].currentMembers.contains(member)){
 					memberCluster = i;
 					break;
